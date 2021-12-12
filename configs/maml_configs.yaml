@@ -1,0 +1,7 @@
+model_config:
+  # how many inner loops is the learner going to see?
+  inner_loop: 4
+  inner_update_steps: 1
+  inner_lr: 0.0001
+  outer_lr: 0.0001
+---

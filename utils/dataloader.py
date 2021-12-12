@@ -3,25 +3,25 @@ from torch.utils.data import DataLoader
 from utils.dataset import MiniImagenetDataset
 
 
-def get_dataloader(meta_config, train_config):
+def get_dataloader(meta_config, model_config):
     if meta_config["dataset"] == "miniimagenet":
         train_loader = DataLoader(
             MiniImagenetDataset(mode="train", meta_config=meta_config),
-            batch_size=1,
+            batch_size=model_config["inner_loop"],
             shuffle=False,
-            num_workers=train_config["num_workers"],
+            num_workers=meta_config["num_workers"],
         )
         val_loader = DataLoader(
             MiniImagenetDataset(mode="val", meta_config=meta_config),
-            batch_size=1,
+            batch_size=model_config["inner_loop"],
             shuffle=False,
-            num_workers=train_config["num_workers"],
+            num_workers=meta_config["num_workers"],
         )
         test_loader = DataLoader(
             MiniImagenetDataset(mode="test", meta_config=meta_config),
-            batch_size=1,
+            batch_size=model_config["inner_loop"],
             shuffle=False,
-            num_workers=train_config["num_workers"],
+            num_workers=meta_config["num_workers"],
         )
 
     else:

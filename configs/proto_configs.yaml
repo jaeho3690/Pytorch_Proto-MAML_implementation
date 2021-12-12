@@ -1,0 +1,8 @@
+model_config:
+  # how many inner loops is the learner going to see?
+  inner_loop: 1
+  embedding-size: 64
+  in_channels: 3
+  out_channels: 64 
+  lr: 0.0001
+---

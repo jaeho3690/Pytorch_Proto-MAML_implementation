@@ -1,2 +1,7 @@
 *.pkl
+*.csv
+*.pt
+__pycache__/
+notebooks/
+
 

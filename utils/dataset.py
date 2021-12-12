@@ -10,6 +10,7 @@ from tqdm import tqdm
 
 import torch
 from torch.utils.data import Dataset
+from torchvision import transforms
 
 
 class MetaDataset(Dataset):
@@ -25,11 +26,9 @@ class MetaDataset(Dataset):
         self.n_way = meta_config["N"]
         self.k_shot = meta_config["K"]
         self.q_query = meta_config["Q"]
-        self.total_episode_num = meta_config["total_episode_num"]
-        self.transforms = None
-        self.episode_file = (
-            f"{meta_config['dataset']}-{self.n_way}way-{self.k_shot}shot-{self.q_query}query-{self.total_episode_num}episodes.pkl"
-        )
+        self.total_episode_num = meta_config[f"total_{self.mode}_episode_num"]
+        self.transform = None
+        self.episode_file = f"{meta_config['dataset']}-{self.mode}-{self.n_way}way-{self.k_shot}shot-{self.q_query}query-{self.total_episode_num}episodes.pkl"
 
         # save episodes to reproduce
         if not os.path.exists("episodes"):
@@ -41,26 +40,30 @@ class MetaDataset(Dataset):
             self.episodes = pickle.load(episode_pickle)
 
     def __len__(self):
-        return self.total_episode_num
+        return self.meta_config[f"total_{self.mode}_episode_num"]
 
     def __getitem__(self, index):
+        # load episode.
         episode = self.episodes[index]
         support_img = self.imagedata[episode["support_idx"], :, :, :]
-        support_label = episode["support_label_idx"]
+        support_label = torch.tensor(episode["support_label_idx"], dtype=torch.long)
         query_img = self.imagedata[episode["query_idx"], :, :, :]
-        query_label = episode["query_label_idx"]
-        label_name = episode["label_name"]
+        query_label = torch.tensor(episode["query_label_idx"], dtype=torch.long)
+        # label_name = episode['label_name']
 
-        if self.transforms:
-            support_img = self.transforms(support_img)
-            query_img = self.transforms(query_img)
+        if self.transform:
+            # apply transform per image and stack them back
+            # transform converts (n_rows, n_cols, n_channels) to (n_channels, n_rows, n_cols).
+            # ToTensor converts np array into torch tensor with value between 0 and 1
+            support_img = torch.stack([self.transform(support_img[b, :, :, :]) for b in range(support_img.shape[0])])
+            query_img = torch.stack([self.transform(query_img[b, :, :, :]) for b in range(query_img.shape[0])])
 
         return {
             "support_img": support_img,
             "support_label": support_label,
             "query_img": query_img,
             "query_label": query_label,
-            "label_name": label_name,
+            # "label_name": label_name,
         }
 
 
@@ -88,12 +91,21 @@ class MiniImagenetDataset(MetaDataset):
             self._load_episode()
         else:
             self._construct_episode()
-        print(f"LOADED EPISODE FILE : {self.episode_file}")
+        print(f"LOADED EPISODE FILE FOR {self.mode}: {self.episode_file}")
+
+        # TODO: Implement
+        self.transform = transforms.Compose(
+            [transforms.ToTensor(), transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))]
+        )
 
     def _construct_episode(self):
         """Construct dict of episodes if it doesn't exists"""
         episodes = OrderedDict()  # {label_id: {label_id(str),support_idx, query_idx},label_name}
-        for i in tqdm(range(self.total_episode_num)):
+        print(f"Building episodes from scratch")
+
+        # TODO: change self.total_epsiode_num
+
+        for i in tqdm(range(self.meta_config[f"total_{self.mode}_episode_num"])):
             support_idx = []
             query_idx = []
             support_label_idx = []
