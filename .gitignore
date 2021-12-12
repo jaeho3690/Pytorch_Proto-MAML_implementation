@@ -1,7 +1,9 @@
 *.pkl
 *.csv
 *.pt
+*.yaml
 __pycache__/
 notebooks/
+.neptune/
 
 
