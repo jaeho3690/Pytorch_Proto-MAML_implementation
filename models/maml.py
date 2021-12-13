@@ -53,18 +53,21 @@ class MAML(nn.Module):
 
             # Loop around the inner tasks
             for inner_episode_idx in range(self.num_tasks_for_inner_update):
-                support_logit = self.learner(
-                    support_images[inner_episode_idx, :, :, :].squeeze(), initial_theta, bn_training=True
-                )
+                support_logit = self.learner(support_images[inner_episode_idx, :, :, :, :], None, bn_training=True)
                 support_loss = F.cross_entropy(support_logit, support_labels[inner_episode_idx])
-                grad = torch.autograd.grad(support_loss, initial_theta)
-                theta_prime = list(map(lambda p: p[1] - self.inner_lr * p[0], zip(grad, initial_theta)))
+                grad = torch.autograd.grad(support_loss, self.learner.parameters())
+                theta_prime = list(map(lambda p: p[1] - self.inner_lr * p[0], zip(grad, self.learner.parameters())))
 
-                query_logit = self.learner(query_images[inner_episode_idx, :, :, :].squeeze(), theta_prime, bn_training=True)
-                query_loss = F.cross_entropy(query_logit, query_labels[inner_episode_idx])
-                accuracy = self.calculate_accuracy(query_logit, query_labels[inner_episode_idx])
-                self.train_accuracy.append(accuracy)
-                self.logger["train/episode/accuracy"].log(accuracy)
+                for _ in range(0, self.num_inner_updates):
+                    query_logit = self.learner(query_images[inner_episode_idx, :, :, :, :], theta_prime, bn_training=True)
+                    query_loss = F.cross_entropy(query_logit, query_labels[inner_episode_idx])
+                    query_grad = torch.autograd.grad(query_loss, theta_prime)
+                    theta_prime = list(map(lambda p: p[1] - self.inner_lr * p[0], zip(query_grad, theta_prime)))
+
+                with torch.no_grad():
+                    accuracy = self.calculate_accuracy(query_logit, query_labels[inner_episode_idx])
+                    self.train_accuracy.append(accuracy)
+                    self.logger["train/episode/accuracy"].log(accuracy)
 
                 inner_losses += query_loss
 

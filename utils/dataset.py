@@ -23,9 +23,14 @@ class MetaDataset(Dataset):
         self.mode = mode
         self.meta_config = meta_config
         self.data_dir = "data/" + meta_config["dataset"]
-        self.n_way = meta_config["N"]
-        self.k_shot = meta_config["K"]
-        self.q_query = meta_config["Q"]
+        if self.mode in ("train"):
+            self.n_way = meta_config["N"]
+            self.k_shot = meta_config["K"]
+            self.q_query = meta_config["Q"]
+        elif self.mode in ("val", "test"):
+            self.n_way = meta_config["valtest_N"]
+            self.k_shot = meta_config["valtest_K"]
+            self.q_query = meta_config["valtest_Q"]
         self.total_episode_num = meta_config[f"total_{self.mode}_episode_num"]
         self.transform = None
         self.episode_file = f"{meta_config['dataset']}-{self.mode}-{self.n_way}way-{self.k_shot}shot-{self.q_query}query-{self.total_episode_num}episodes.pkl"
@@ -111,6 +116,9 @@ class MiniImagenetDataset(MetaDataset):
             support_label_idx = []
             query_label_idx = []
             # sample from class
+            assert (
+                len(self.unique_labels) >= self.n_way
+            ), f"Number of unique labels({len(self.unique_labels)}) should be bigger than the number of ways({self.n_way})"
             label_ids = sample(self.unique_labels, self.n_way)
             label_name = [self.id2label[id] for id in label_ids]
 

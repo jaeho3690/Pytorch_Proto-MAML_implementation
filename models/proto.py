@@ -34,11 +34,12 @@ class ProtoNet(nn.Module):
 
     def calculate_prototypes(self, support_embeddings, support_labels):
         prototypes = []
+        embedding_dim = support_embeddings.shape[1]
 
         support_labels_expand = support_labels.view(-1, 1).expand((support_embeddings.shape))
         # aggregate samples from the same class. average them to get prototype
-        for label in range(self.n_way):
-            proto = torch.mean(support_embeddings[support_labels_expand == label].view(self.k_shot, -1), dim=0)
+        for label in range(len(support_labels[0].unique())):
+            proto = torch.mean(support_embeddings[support_labels_expand == label].view(-1, embedding_dim), dim=0)
             prototypes.append(proto)
 
         return torch.stack(prototypes)
@@ -121,6 +122,7 @@ class ProtoNet(nn.Module):
                     return
 
     def test(self, test_loader):
+        print("run test!")
         with torch.no_grad():
             test_accuracy_lists = []
             for test_episode_idx, episode in enumerate(tqdm(test_loader)):
@@ -138,7 +140,7 @@ class ProtoNet(nn.Module):
                 test_accuracy_lists.append(accuracy)
 
             print(f"Test Accuracy at {self.n_way}Way-{self.k_shot}Shot: {np.mean(test_accuracy_lists)}")
-            self.logger["test/accuracy"].log(accuracy)
+            self.logger["test/accuracy"].log(np.mean(test_accuracy_lists))
 
     def calculate_accuracy(self, distance_matrix, query_labels):
         with torch.no_grad():
