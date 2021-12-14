@@ -11,12 +11,12 @@ import neptune.new as neptune
 def main():
     # Load generic meta-learning parameters through argparser.
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", default="proto", help="select model type['maml','proto']")
+    parser.add_argument("--model", default="maml", help="select model type['maml','proto']")
     parser.add_argument("--dataset", default="miniimagenet", help="select data type")
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--num_workers", type=int, default=1)
     parser.add_argument("--N", default=5, type=int, help="train episode N way")
-    parser.add_argument("--K", default=5, type=int, help="train episode K shot")
+    parser.add_argument("--K", default=1, type=int, help="train episode K shot")
     parser.add_argument("--Q", default=15, type=int, help="train episode num of query per class")
     parser.add_argument("--valtest_N", default=5, type=int, help="Val/Test episode N way")
     parser.add_argument("--valtest_K", default=1, type=int, help="Val/Test episode K shot")
@@ -34,7 +34,7 @@ def main():
 
     meta_config[
         "save_pt"
-    ] = f"{meta_config['model']}-{meta_config['dataset']}-{meta_config['N']}way-{meta_config['K']}shot-{meta_config['Q']}"
+    ] = f"{meta_config['model']}-{meta_config['dataset']}-{meta_config['N']}way-{meta_config['K']}shot-{meta_config['Q']}-testN{meta_config['valtest_N']}K{meta_config['valtest_K']}"
 
     with open(f"configs/{meta_config['model']}_configs.yaml") as c:
         configs = list(yaml.load_all(c, Loader=yaml.FullLoader))

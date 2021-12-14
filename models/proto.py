@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import scipy.stats as st
 
 import torch
 from torch import nn
@@ -71,21 +72,21 @@ class ProtoNet(nn.Module):
             # update
             loss.backward()
             self.optimizer.step()
-
             # Logging
             accuracy = self.calculate_accuracy(distance_matrix, query_labels)
             self.train_accuracy.append(accuracy)
             self.logger["train/episode/accuracy"].log(accuracy)
 
-            # run validation when episode_idx  == self.train_iter
-            if (episode_idx % self.train_iter == 0) and (episode_idx != 0):
-                self.validate(val_loader)
-
-            if episode_idx == self.total_train_episode_num:
+            if episode_idx + 1 == self.total_train_episode_num:
                 train_log = pd.DataFrame(self.train_accuracy)
                 val_log = pd.DataFrame(self.val_accuracy)
                 train_log.to_csv(f"logging/{self.meta_config['save_pt']}-train.csv")
                 val_log.to_csv(f"logging/{self.meta_config['save_pt']}-val.csv")
+                self.logger["train/preds"].upload(f"logging/{self.meta_config['save_pt']}-train.csv")
+                return
+            # run validation when episode_idx  == self.train_iter
+            if (episode_idx % self.train_iter == 0) and (episode_idx != 0):
+                self.validate(val_loader)
 
     def validate(self, val_loader):
         print("run validation!")
@@ -138,9 +139,18 @@ class ProtoNet(nn.Module):
                 _, distance_matrix = self.prototypical_loss(prototypes, query_embeddings, query_labels)
                 accuracy = self.calculate_accuracy(distance_matrix, query_labels)
                 test_accuracy_lists.append(accuracy)
+            test_log = pd.DataFrame(test_accuracy_lists, columns=["Accuracy"])
+            test_log.to_csv(f"logging/{self.meta_config['save_pt']}-test.csv")
 
+            (low, high) = st.t.interval(
+                alpha=0.95, df=len(test_accuracy_lists) - 1, loc=np.mean(test_accuracy_lists), scale=st.sem(test_accuracy_lists)
+            )
             print(f"Test Accuracy at {self.n_way}Way-{self.k_shot}Shot: {np.mean(test_accuracy_lists)}")
+            print(f"Test Accuracy 95% interval :{low:.3f},{high:.3f}")
+            self.logger["test/preds"].upload(f"logging/{self.meta_config['save_pt']}-test.csv")
             self.logger["test/accuracy"].log(np.mean(test_accuracy_lists))
+            self.logger["test/low_95accuracy"].log(low)
+            self.logger["test/high_95accuracy"].log(high)
 
     def calculate_accuracy(self, distance_matrix, query_labels):
         with torch.no_grad():

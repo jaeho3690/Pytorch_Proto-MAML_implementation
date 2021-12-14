@@ -31,7 +31,7 @@ class MAML(nn.Module):
         self.best_val_accuracy = 0
 
         self.learner.to(device=self.device)
-        self.optimizer = torch.optim.Adam(self.learner.parameters(), lr=1e-3)
+        self.optimizer = torch.optim.Adam(self.learner.parameters(), lr=self.outer_lr)
 
     def train(self, train_loader, val_loader):
         """Receives the data_loader and run inner update"""
@@ -58,18 +58,21 @@ class MAML(nn.Module):
                 grad = torch.autograd.grad(support_loss, self.learner.parameters())
                 theta_prime = list(map(lambda p: p[1] - self.inner_lr * p[0], zip(grad, self.learner.parameters())))
 
-                for _ in range(0, self.num_inner_updates):
-                    query_logit = self.learner(query_images[inner_episode_idx, :, :, :, :], theta_prime, bn_training=True)
-                    query_loss = F.cross_entropy(query_logit, query_labels[inner_episode_idx])
-                    query_grad = torch.autograd.grad(query_loss, theta_prime)
-                    theta_prime = list(map(lambda p: p[1] - self.inner_lr * p[0], zip(query_grad, theta_prime)))
+                # if you want several updates
+                for _ in range(1, self.num_inner_updates):
+                    support_logit = self.learner(support_images[inner_episode_idx, :, :, :, :], theta_prime, bn_training=True)
+                    support_loss = F.cross_entropy(support_logit, support_labels[inner_episode_idx])
+                    grad = torch.autograd.grad(support_loss, theta_prime)
+                    theta_prime = list(map(lambda p: p[1] - self.inner_lr * p[0], zip(grad, theta_prime)))
+
+                query_logit = self.learner(query_images[inner_episode_idx, :, :, :, :], theta_prime, bn_training=True)
+                query_loss = F.cross_entropy(query_logit, query_labels[inner_episode_idx])
+                inner_losses += query_loss
 
                 with torch.no_grad():
                     accuracy = self.calculate_accuracy(query_logit, query_labels[inner_episode_idx])
                     self.train_accuracy.append(accuracy)
                     self.logger["train/episode/accuracy"].log(accuracy)
-
-                inner_losses += query_loss
 
             inner_losses = inner_losses / self.num_tasks_for_inner_update
             self.optimizer.zero_grad()
