@@ -4,9 +4,8 @@ This repository contains the implementation of MAML and Prototypical Network on 
 The repository is based on neptune logger so you can simply type in your neptune project name and api_token in the `utils.py` file for your use.
 
 # Whats different from all other repositories?
-- I thinks its more readable(ofcourse, I implemented it so it is more readable for me)
+- I thinks its more readable and intuitive
 - Neptune logging
-- 
 
 # Requirements and installation
 
@@ -20,6 +19,22 @@ The main requirements are:
 ```
 pip install 
 ```
+## To Setup for experiment
+```
+# Download miniimagenet files
+sh download.sh
+
+# Setup directory
+mkdir episodes
+mkdir logging
+mkdir results
+mkdir checkpoints
+```
+
+## Set your neptune api key and neptune project file in utils.py
+You must set the NEPTUNE API_TOKEN and NEPTUNE_PROJECT in `utils.py` file for logging. If you do not want logging, you must comment out all logger related codes.
+
+<p align="left"><img width="99%" src="assets/NEPTUNE.png" /></p>
 
 ## To run all experiment files
 ```
@@ -29,7 +44,7 @@ sh maml.sh
 
 
 ## Configurations
-There are two main configuration files to understand
+There are two main configuration files to understand. `meta_config` contains configurations related to meta learning experiements. We accept changes through argparser for `meta_config`. `model_config` contains all model relted configurations. You can set model specific configurations in the `config` directory.
 
 
 ## Acknowledgment

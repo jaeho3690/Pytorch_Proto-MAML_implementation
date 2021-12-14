@@ -4,6 +4,7 @@ import random
 import torch
 
 NEPTUNE_API_TOKEN = "eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI1YTAyNzAzMC00ZjljLTRiZjQtOWFhNS0xNzZmYjFjOTNiNDYifQ=="
+NEPTUNE_PROJECT = "jaeho3690/metalearningCW"
 
 
 def set_seed(seed):

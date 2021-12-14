@@ -1,7 +1,7 @@
 import argparse
 import yaml
 
-from utils.utils import NEPTUNE_API_TOKEN
+from utils.utils import NEPTUNE_API_TOKEN, NEPTUNE_PROJECT
 from trainer import Trainer
 import neptune.new as neptune
 
@@ -40,7 +40,7 @@ def main():
         model_config = configs[0]["model_config"]
 
     # Set Neptune logger
-    logger = neptune.init(project="jaeho3690/metalearningCW", api_token=NEPTUNE_API_TOKEN)
+    logger = neptune.init(project=NEPTUNE_PROJECT, api_token=NEPTUNE_API_TOKEN)
     logger["sys/tags"].add(
         [meta_config["model"], meta_config["dataset"], str(meta_config["N"]), str(meta_config["K"]), str(meta_config["Q"])]
     )
