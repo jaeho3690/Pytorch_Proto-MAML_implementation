@@ -1,4 +1,5 @@
-""" Sourced from https://github.com/dragen1860/MAML-Pytorch/blob/98a00d41724c133bd29619a2fb2cc46dd128a368/learner.py"""
+""" Sourced the Learner module from https://github.com/dragen1860/MAML-Pytorch/blob/98a00d41724c133bd29619a2fb2cc46dd128a368/learner.py"""
+""" Source the ProtoLearner module from """
 import torch
 from torch import nn
 from torch.nn import functional as F

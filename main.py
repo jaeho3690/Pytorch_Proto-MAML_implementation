@@ -1,9 +1,7 @@
-import os
-import datetime
 import argparse
 import yaml
 
-from utils.utils import NEPTUNE_API_TOKEN, set_seed
+from utils.utils import NEPTUNE_API_TOKEN
 from trainer import Trainer
 import neptune.new as neptune
 
@@ -36,10 +34,12 @@ def main():
         "save_pt"
     ] = f"{meta_config['model']}-{meta_config['dataset']}-{meta_config['N']}way-{meta_config['K']}shot-{meta_config['Q']}-testN{meta_config['valtest_N']}K{meta_config['valtest_K']}"
 
+    # Load model specific configurations
     with open(f"configs/{meta_config['model']}_configs.yaml") as c:
         configs = list(yaml.load_all(c, Loader=yaml.FullLoader))
         model_config = configs[0]["model_config"]
-    # logger = None
+
+    # Set Neptune logger
     logger = neptune.init(project="jaeho3690/metalearningCW", api_token=NEPTUNE_API_TOKEN)
     logger["sys/tags"].add(
         [meta_config["model"], meta_config["dataset"], str(meta_config["N"]), str(meta_config["K"]), str(meta_config["Q"])]
@@ -47,7 +47,7 @@ def main():
     logger["meta_config"] = meta_config
     logger["model_config"] = model_config
 
-    # logger = None
+    # model architecture for MAML. When proto, the learner_config is simply ignored.
     learner_config = [
         ("conv2d", [32, 3, 3, 3, 1, 0]),
         ("relu", [True]),
