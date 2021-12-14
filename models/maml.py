@@ -197,5 +197,6 @@ class MAML(nn.Module):
         print(f"Test Accuracy 95% interval :{low:.3f},{high:.3f}")
         self.logger["test/preds"].upload(f"logging/{self.meta_config['save_pt']}-test.csv")
         self.logger["test/accuracy"].log(np.mean(test_accuracy_lists))
+        self.logger["test/confidence"].log(high - accuracy)
         self.logger["test/low_95accuracy"].log(low)
         self.logger["test/high_95accuracy"].log(high)
