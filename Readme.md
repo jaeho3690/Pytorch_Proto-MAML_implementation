@@ -20,6 +20,7 @@ The main requirements are:
 git clone git@github.com:jaeho3690/Pytorch_Proto-MAML_implementation.git
 cd Pytorch_Proto-MAML_implementation
 ```
+
 Install the dependencies:
 ```bash
 conda create -n meta python=3.8
@@ -28,7 +29,7 @@ conda install -y pytorch=1.8.0 torchvision=0.9.0 cudatoolkit=10.0 -c pytorch
 pip install neptune-client==0.13.3
 ```
 ## To Setup for experiment
-```
+
 # Download miniimagenet files
 ```bash
 sh download.sh
